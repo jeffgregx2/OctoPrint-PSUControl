@@ -349,6 +349,10 @@ class PSUControl(octoprint.plugin.StartupPlugin,
 
 
     def _idle_poweroff(self):
+        
+        self._logger.debug("idle_poweroff: powerOffWhenIdle: {}, waitForHeaters: {}, isPrinting: {}, isPaused: {}".
+            format( self.config['powerOffWhenIdle'], self._waitForHeaters, self._printer.is_printing(), self._printer.is_paused()))
+        
         if not self.config['powerOffWhenIdle']:
             return
 
@@ -369,6 +373,8 @@ class PSUControl(octoprint.plugin.StartupPlugin,
     def _wait_for_heaters(self):
         self._waitForHeaters = True
         heaters = self._printer.get_current_temperatures()
+        
+        self._logger.debug("Wait_for_headers: heaters={}".format(heaters))
 
         for heater, entry in heaters.items():
             target = entry.get("target")
@@ -376,7 +382,7 @@ class PSUControl(octoprint.plugin.StartupPlugin,
                 # heater doesn't exist in fw
                 continue
 
-            if target in self._idleIgnoreHeatersArray:
+            if heater in self._idleIgnoreHeatersArray:
                 self._logger.debug("Ignoring heater {}.".format(heater))
                 continue
 
@@ -389,7 +395,10 @@ class PSUControl(octoprint.plugin.StartupPlugin,
             if temp != 0:
                 self._logger.info("Turning off heater: {}".format(heater))
                 self._skipIdleTimer = True
-                self._printer.set_temperature(heater, 0)
+                try:
+                    self._printer.set_temperature(heater, 0)
+                except Exception as e:
+                    self._logger.warn("Attempt to set temperature for {} failed: {}".format(target, e))
                 self._skipIdleTimer = False
             else:
                 self._logger.debug("Heater {} already off.".format(heater))
