@@ -420,8 +420,8 @@ class PSUControl(octoprint.plugin.StartupPlugin,
                     # heater doesn't exist in fw
                     continue
 
-                if actual in self._idleIgnoreHeatersArray:
-                    self._logger.debug("Ignoring heater {}.".format(actual))
+                if heater in self._idleIgnoreHeatersArray:
+                    self._logger.debug("Ignoring heater {}.".format(heater))
                     continue
 
                 try:
